@@ -1,0 +1,1 @@
+// GraphQL query to fetch all CPT slugs
