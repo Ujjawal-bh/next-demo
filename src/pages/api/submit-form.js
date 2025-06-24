@@ -29,14 +29,16 @@ export default async function handler(req, res) {
 
     try {
       // ✅ Step 1: Server-side reCAPTCHA verification
-      let recaptchaToken = fields['g-recaptcha-response'] || fields['g_recaptcha_response'];
+      let recaptchaToken =
+        (Array.isArray(fields['g-recaptcha-response']) ? fields['g-recaptcha-response'][0] : fields['g-recaptcha-response']) ||
+        (Array.isArray(fields['g_recaptcha_response']) ? fields['g_recaptcha_response'][0] : fields['g_recaptcha_response']) ||
+        '';
 
-      if (Array.isArray(recaptchaToken)) {
-        recaptchaToken = recaptchaToken[0];
-      }
+      console.log(' Parsed reCAPTCHA token:', recaptchaToken);
+      console.log(' Using reCAPTCHA secret:', process.env.RECAPTCHA_SECRET_KEY);
 
-      if (typeof recaptchaToken !== 'string' || !recaptchaToken.trim()) {
-        console.warn("Missing or invalid reCAPTCHA token:", recaptchaToken);
+      if (!recaptchaToken || typeof recaptchaToken !== 'string') {
+        console.warn(' Missing or invalid reCAPTCHA token:', recaptchaToken);
         return res.status(400).json({ message: 'Invalid reCAPTCHA token received' });
       }
 
@@ -52,24 +54,24 @@ export default async function handler(req, res) {
         }
       );
 
+      console.log(' Google reCAPTCHA response:', captchaVerifyRes.data);
+
       if (!captchaVerifyRes.data.success) {
-        console.warn('reCAPTCHA verification failed:', captchaVerifyRes.data);
+        console.warn(' reCAPTCHA verification failed:', captchaVerifyRes.data);
         return res.status(400).json({
           message: 'reCAPTCHA verification failed',
           errors: captchaVerifyRes.data['error-codes'],
         });
       }
 
-      // ✅ Step 2: Build the formData to send to Gravity Forms
+      //  Step 2: Build the formData to send to Gravity Forms
       const formData = new FormData();
 
-      // Append fields
       for (const key in fields) {
         const value = fields[key];
         formData.append(key, Array.isArray(value) ? value.join(', ') : value);
       }
 
-      // Append valid uploaded files
       for (const key in files) {
         const file = files[key];
         const fileList = Array.isArray(file) ? file : [file];
@@ -80,7 +82,7 @@ export default async function handler(req, res) {
             continue;
           }
 
-          console.log(`Uploading file: ${f.originalFilename}`);
+          console.log(` Uploading file: ${f.originalFilename}`);
           formData.append(key, fs.createReadStream(f.filepath), f.originalFilename);
         }
       }
@@ -103,7 +105,7 @@ export default async function handler(req, res) {
       return res.status(200).json({ message: 'Form submitted successfully', data: gfResponse.data });
 
     } catch (error) {
-      console.error('Form submission error:', error.message);
+      console.error(' Form submission error:', error.message);
       return res.status(500).json({
         message: 'Submission failed',
         error: error.response?.data || error.message,
