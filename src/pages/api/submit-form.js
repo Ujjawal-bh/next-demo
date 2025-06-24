@@ -30,8 +30,15 @@ export default async function handler(req, res) {
     try {
       // ✅ Step 1: Server-side reCAPTCHA verification
       let recaptchaToken = fields['g-recaptcha-response'] || fields['g_recaptcha_response'];
-    if (Array.isArray(recaptchaToken)) recaptchaToken = recaptchaToken[0];
 
+      if (Array.isArray(recaptchaToken)) {
+        recaptchaToken = recaptchaToken[0];
+      }
+
+      if (typeof recaptchaToken !== 'string' || !recaptchaToken.trim()) {
+        console.warn("Missing or invalid reCAPTCHA token:", recaptchaToken);
+        return res.status(400).json({ message: 'Invalid reCAPTCHA token received' });
+      }
 
       const captchaVerifyRes = await axios.post(
         'https://www.google.com/recaptcha/api/siteverify',
