@@ -58,7 +58,7 @@ export default function Contact(props) {
       });
 
       const result = await res.json();
-
+      console.log('reCAPTCHA verified:', result.recaptcha);
       if (res.ok) {
         setStatus("Form submitted successfully!");
         e.target.reset();

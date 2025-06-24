@@ -107,7 +107,7 @@ export default async function handler(req, res) {
       );
 
       console.log('Gravity Forms response:', gfResponse.data);
-      return res.status(200).json({ message: 'Form submitted successfully', data: gfResponse.data });
+      return res.status(200).json({ message: 'Form submitted successfully', recaptcha: captchaVerifyRes.data, data: gfResponse.data });
 
     } catch (error) {
       console.error('Form submission error:', error.message);
