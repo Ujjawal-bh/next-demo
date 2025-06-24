@@ -28,7 +28,7 @@ export default async function handler(req, res) {
     }
 
     try {
-      // ✅ Step 1: Server-side reCAPTCHA verification
+      //  Step 1: Server-side reCAPTCHA verification
       let recaptchaToken = '';
 
       const recaptchaField = fields['g-recaptcha-response'] || fields['g_recaptcha_response'];
@@ -39,11 +39,11 @@ export default async function handler(req, res) {
         recaptchaToken = recaptchaField.trim();
       }
 
-      console.log('🔍 Parsed reCAPTCHA token:', recaptchaToken);
-      console.log('🔑 Using reCAPTCHA secret:', process.env.RECAPTCHA_SECRET_KEY);
+      console.log('Parsed reCAPTCHA token:', recaptchaToken);
+      console.log(' Using reCAPTCHA secret:', process.env.RECAPTCHA_SECRET_KEY);
 
       if (!recaptchaToken) {
-        console.warn('❌ Missing or invalid reCAPTCHA token:', recaptchaField);
+        console.warn('Missing or invalid reCAPTCHA token:', recaptchaField);
         return res.status(400).json({ message: 'Invalid reCAPTCHA token received' });
       }
 
@@ -59,7 +59,7 @@ export default async function handler(req, res) {
         }
       );
 
-      console.log('✅ Google reCAPTCHA response:', captchaVerifyRes.data);
+      console.log('Google reCAPTCHA response:', captchaVerifyRes.data);
 
       if (!captchaVerifyRes.data.success) {
         console.warn('⚠️ reCAPTCHA verification failed:', captchaVerifyRes.data);
@@ -69,7 +69,7 @@ export default async function handler(req, res) {
         });
       }
 
-      // ✅ Step 2: Build the formData to send to Gravity Forms
+      //  Step 2: Build the formData to send to Gravity Forms
       const formData = new FormData();
 
       for (const key in fields) {
@@ -87,12 +87,12 @@ export default async function handler(req, res) {
             continue;
           }
 
-          console.log(`📤 Uploading file: ${f.originalFilename}`);
+          console.log(`Uploading file: ${f.originalFilename}`);
           formData.append(key, fs.createReadStream(f.filepath), f.originalFilename);
         }
       }
 
-      // ✅ Step 3: Submit to Gravity Forms REST API
+      //  Step 3: Submit to Gravity Forms REST API
       const gfResponse = await axios.post(
         `${process.env.NEXT_PUBLIC_WORDPRESS_URL}/wp-json/gf/v2/forms/${process.env.NEXT_PUBLIC_GF_FORM_ID}/submissions`,
         formData,
@@ -106,11 +106,11 @@ export default async function handler(req, res) {
         }
       );
 
-      console.log('✅ Gravity Forms response:', gfResponse.data);
+      console.log('Gravity Forms response:', gfResponse.data);
       return res.status(200).json({ message: 'Form submitted successfully', data: gfResponse.data });
 
     } catch (error) {
-      console.error('🔥 Form submission error:', error.message);
+      console.error('Form submission error:', error.message);
       return res.status(500).json({
         message: 'Submission failed',
         error: error.response?.data || error.message,
