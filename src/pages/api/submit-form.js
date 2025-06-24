@@ -29,10 +29,9 @@ export default async function handler(req, res) {
 
     try {
       // ✅ Step 1: Server-side reCAPTCHA verification
-      const recaptchaToken = fields['g-recaptcha-response'] || fields['g_recaptcha_response'];
-      if (!recaptchaToken) {
-        return res.status(400).json({ message: 'reCAPTCHA token missing' });
-      }
+      let recaptchaToken = fields['g-recaptcha-response'] || fields['g_recaptcha_response'];
+    if (Array.isArray(recaptchaToken)) recaptchaToken = recaptchaToken[0];
+
 
       const captchaVerifyRes = await axios.post(
         'https://www.google.com/recaptcha/api/siteverify',
