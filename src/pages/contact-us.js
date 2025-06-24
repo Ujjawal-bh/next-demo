@@ -49,6 +49,7 @@ export default function Contact(props) {
       recaptchaRef.current.reset();
       formData.append("g-recaptcha-response", token);
 
+      console.log('reCAPTCHA token:', token);
       setStatus("Submitting...");
 
       const res = await fetch("/api/submit-form", {
