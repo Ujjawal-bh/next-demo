@@ -14,7 +14,12 @@ export default async function handler(req, res) {
     return res.status(405).json({ message: 'Method Not Allowed' });
   }
 
-  const form = formidable({ multiples: true, keepExtensions: true, allowEmptyFiles: true, minFileSize: 0  });
+  const form = formidable({
+    multiples: true,
+    keepExtensions: true,
+    allowEmptyFiles: true,
+    minFileSize: 0,
+  });
 
   form.parse(req, async (err, fields, files) => {
     if (err) {
@@ -23,35 +28,55 @@ export default async function handler(req, res) {
     }
 
     try {
+      // ✅ 1. Server-side reCAPTCHA verification
+      const recaptchaToken = fields['g-recaptcha-response'] || fields['g_recaptcha_response'];
+      if (!recaptchaToken) {
+        return res.status(400).json({ message: 'reCAPTCHA token missing' });
+      }
+
+      const verifyRes = await axios.post(
+        `https://www.google.com/recaptcha/api/siteverify`,
+        null,
+        {
+          params: {
+            secret: process.env.RECAPTCHA_SECRET_KEY,
+            response: recaptchaToken,
+          },
+        }
+      );
+
+      if (!verifyRes.data.success) {
+        console.warn('reCAPTCHA verification failed:', verifyRes.data);
+        return res.status(400).json({ message: 'reCAPTCHA verification failed' });
+      }
+
+      // ✅ 2. Prepare form data to send to Gravity Forms
       const formData = new FormData();
 
-      // Append form fields
+      // Append all fields
       for (const key in fields) {
         const value = fields[key];
         formData.append(key, Array.isArray(value) ? value.join(', ') : value);
       }
 
-      // Append uploaded files (only if present and valid)
-      // Append uploaded files (only if valid)
-for (const key in files) {
-  const file = files[key];
-  const fileList = Array.isArray(file) ? file : [file];
+      // Append files if valid
+      for (const key in files) {
+        const file = files[key];
+        const fileList = Array.isArray(file) ? file : [file];
 
-  for (const f of fileList) {
-    // Skip if no file was uploaded
-    if (!f || !f.filepath || !fs.existsSync(f.filepath) || f.size === 0) {
-      console.warn(`⚠️ Skipping empty or invalid file for key "${key}"`);
-      continue;
-    }
+        for (const f of fileList) {
+          if (!f || !f.filepath || !fs.existsSync(f.filepath) || f.size === 0) {
+            console.warn(`⚠️ Skipping invalid file for key "${key}"`);
+            continue;
+          }
 
-    console.log(`Uploading file: ${f.originalFilename}`);
-    formData.append(key, fs.createReadStream(f.filepath), f.originalFilename);
-  }
-}
+          console.log(`Uploading file: ${f.originalFilename}`);
+          formData.append(key, fs.createReadStream(f.filepath), f.originalFilename);
+        }
+      }
 
-
-      // Send to Gravity Forms REST API
-      const response = await axios.post(
+      // ✅ 3. Submit to Gravity Forms REST API
+      const gfResponse = await axios.post(
         `${process.env.NEXT_PUBLIC_WORDPRESS_URL}/wp-json/gf/v2/forms/${process.env.NEXT_PUBLIC_GF_FORM_ID}/submissions`,
         formData,
         {
@@ -64,8 +89,9 @@ for (const key in files) {
         }
       );
 
-      console.log('Gravity Forms response:', response.data);
-      res.status(200).json({ message: 'Form submitted', data: response.data });
+      console.log('Gravity Forms response:', gfResponse.data);
+      res.status(200).json({ message: 'Form submitted', data: gfResponse.data });
+
     } catch (error) {
       console.error('Gravity Forms Submission Error');
 
