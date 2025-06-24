@@ -1,5 +1,6 @@
 import { ApolloProvider } from "@apollo/client";
 import client from "../lib/apolloClient";
+import '../lib/fontawesome'
 //import { Inter, Roboto_Slab } from "next/font/google";
 import "@/styles/globals.css";
 import { bodyFont, headingFont } from '@/fonts'

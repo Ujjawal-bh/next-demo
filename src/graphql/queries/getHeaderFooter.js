@@ -115,6 +115,10 @@ export const GET_HEADER_FOOTER = gql`
           }
         }
         searchButton
+        socialLinks {
+          platform
+          url
+        }
         topNavigation
       }
     }

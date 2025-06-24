@@ -29,7 +29,7 @@ const Navigation = ({ menuItem, headerLogo, startbuttton }) => {
 
   //const items = Array.isArray(menuItem) ? menuItem : [];
   //console.log("themeoption", headerLogo);
-  console.log("menuitem", menuItem.childItems);
+  //console.log("menuitem1", menuItem.childItems);
   return (
     <>
       <nav className="relative items-center pt-5 px-4 mx-auto max-w-screen-xl sm:px-8 md:flex md:space-x-6">
@@ -90,7 +90,7 @@ const Navigation = ({ menuItem, headerLogo, startbuttton }) => {
                     {item.childItems.nodes.length > 0 && (
                       <span onClick={handleToggle}>
                         <svg class={`ml-1 w-4 h-4 ${(!isOpen) ? '' : 'rotate-180'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path d="M19 9l-7 7-7-7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                          <path d="M19 9l-7 7-7-7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                         </svg>
                       </span>
                     )}
@@ -105,7 +105,7 @@ const Navigation = ({ menuItem, headerLogo, startbuttton }) => {
                           {child.childItems.nodes.length > 0 && (
                             <span className="ml-auto mr-1 min-w-[16px]">
                               <svg class="ml-1 w-4 h-4 -rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path d="M19 9l-7 7-7-7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                <path d="M19 9l-7 7-7-7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                               </svg>
                             </span>
                           )}

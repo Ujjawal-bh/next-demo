@@ -93,8 +93,8 @@ export const GET_ALL_TEAMS = gql`
       teamOptionsFields {
         designation
         socialLinks {
-          socialChannel
-          socialLink
+          platform
+          url
         }
       }
     }

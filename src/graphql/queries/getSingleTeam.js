@@ -27,8 +27,8 @@ export const GET_SINGLE_TEAM = gql`
       teamOptionsFields {
         designation
         socialLinks {
-          socialChannel
-          socialLink
+          platform
+          url
         }
       }
       seo {
