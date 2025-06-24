@@ -28,7 +28,7 @@ const nextConfig: NextConfig = {
               "img-src 'self' data: blob: https://headlesswp.galaxyweblinks.com",
               
               // Scripts (preserve existing allowances)
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://apis.google.com",
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://apis.google.com https://www.google.com https://www.gstatic.com; frame-src https://www.google.com https://www.gstatic.com;",
               
               // Styles (preserve existing allowances)
               "style-src 'self' 'unsafe-inline' https://nextjs-demo.galaxyweblinks.com https://fonts.googleapis.com",
