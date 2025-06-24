@@ -28,45 +28,49 @@ export default async function handler(req, res) {
     }
 
     try {
-      // ✅ 1. Server-side reCAPTCHA verification
+      // ✅ Step 1: Server-side reCAPTCHA verification
       const recaptchaToken = fields['g-recaptcha-response'] || fields['g_recaptcha_response'];
       if (!recaptchaToken) {
         return res.status(400).json({ message: 'reCAPTCHA token missing' });
       }
 
-      const verifyRes = await axios.post(
-        `https://www.google.com/recaptcha/api/siteverify`,
-        null,
+      const captchaVerifyRes = await axios.post(
+        'https://www.google.com/recaptcha/api/siteverify',
+        new URLSearchParams({
+          secret: process.env.RECAPTCHA_SECRET_KEY,
+          response: recaptchaToken,
+          remoteip: req.headers['x-forwarded-for'] || req.connection.remoteAddress || '',
+        }).toString(),
         {
-          params: {
-            secret: process.env.RECAPTCHA_SECRET_KEY,
-            response: recaptchaToken,
-          },
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         }
       );
 
-      if (!verifyRes.data.success) {
-        console.warn('reCAPTCHA verification failed:', verifyRes.data);
-        return res.status(400).json({ message: 'reCAPTCHA verification failed' });
+      if (!captchaVerifyRes.data.success) {
+        console.warn('reCAPTCHA verification failed:', captchaVerifyRes.data);
+        return res.status(400).json({
+          message: 'reCAPTCHA verification failed',
+          errors: captchaVerifyRes.data['error-codes'],
+        });
       }
 
-      // ✅ 2. Prepare form data to send to Gravity Forms
+      // ✅ Step 2: Build the formData to send to Gravity Forms
       const formData = new FormData();
 
-      // Append all fields
+      // Append fields
       for (const key in fields) {
         const value = fields[key];
         formData.append(key, Array.isArray(value) ? value.join(', ') : value);
       }
 
-      // Append files if valid
+      // Append valid uploaded files
       for (const key in files) {
         const file = files[key];
         const fileList = Array.isArray(file) ? file : [file];
 
         for (const f of fileList) {
           if (!f || !f.filepath || !fs.existsSync(f.filepath) || f.size === 0) {
-            console.warn(`⚠️ Skipping invalid file for key "${key}"`);
+            console.warn(`⚠️ Skipping empty or invalid file for key "${key}"`);
             continue;
           }
 
@@ -75,7 +79,7 @@ export default async function handler(req, res) {
         }
       }
 
-      // ✅ 3. Submit to Gravity Forms REST API
+      // ✅ Step 3: Submit to Gravity Forms REST API
       const gfResponse = await axios.post(
         `${process.env.NEXT_PUBLIC_WORDPRESS_URL}/wp-json/gf/v2/forms/${process.env.NEXT_PUBLIC_GF_FORM_ID}/submissions`,
         formData,
@@ -90,20 +94,11 @@ export default async function handler(req, res) {
       );
 
       console.log('Gravity Forms response:', gfResponse.data);
-      res.status(200).json({ message: 'Form submitted', data: gfResponse.data });
+      return res.status(200).json({ message: 'Form submitted successfully', data: gfResponse.data });
 
     } catch (error) {
-      console.error('Gravity Forms Submission Error');
-
-      if (error.response) {
-        console.error('Status:', error.response.status);
-        console.error('Headers:', error.response.headers);
-        console.error('Data:', error.response.data);
-      } else {
-        console.error('Error:', error.message);
-      }
-
-      res.status(500).json({
+      console.error('Form submission error:', error.message);
+      return res.status(500).json({
         message: 'Submission failed',
         error: error.response?.data || error.message,
       });
